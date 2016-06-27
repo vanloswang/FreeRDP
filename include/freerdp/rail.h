@@ -21,6 +21,8 @@
 #ifndef FREERDP_RAIL_GLOBAL_H
 #define FREERDP_RAIL_GLOBAL_H
 
+#include <winpr/wnd.h>
+
 #include <freerdp/types.h>
 
 /* RAIL PDU flags */
@@ -93,14 +95,6 @@ enum SPI_MASK
 
 /* Client Notify Event PDU */
 #ifndef _WIN32
-#define WM_LBUTTONDOWN					0x00000201
-#define WM_LBUTTONUP					0x00000202
-#define WM_RBUTTONDOWN					0x00000204
-#define WM_RBUTTONUP					0x00000205
-#define WM_CONTEXTMENU					0x0000007B
-#define WM_LBUTTONDBLCLK				0x00000203
-#define WM_RBUTTONDBLCLK				0x00000206
-
 #define NIN_SELECT					0x00000400
 #define NIN_KEYSELECT					0x00000401
 #define NIN_BALLOONSHOW					0x00000402
@@ -380,5 +374,17 @@ typedef struct _RAIL_COMPARTMENT_INFO_ORDER RAIL_COMPARTMENT_INFO_ORDER;
 #define RDP_RAIL_ORDER_LANGUAGEIMEINFO	0x0011
 #define RDP_RAIL_ORDER_COMPARTMENTINFO	0x0012
 #define RDP_RAIL_ORDER_HANDSHAKE_EX	0x0013
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+FREERDP_API BOOL rail_read_unicode_string(wStream* s, RAIL_UNICODE_STRING* unicode_string);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* FREERDP_RAIL_GLOBAL_H */

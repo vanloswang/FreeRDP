@@ -58,33 +58,44 @@ static INLINE UINT64 _rotr64(UINT64 value, int shift) {
 
 #if (__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 2))
 
-#define _byteswap_ushort(_val)	__builtin_bswap16(_val)
 #define _byteswap_ulong(_val)	__builtin_bswap32(_val)
 #define _byteswap_uint64(_val)	__builtin_bswap64(_val)
 
 #else
 
-#define _byteswap_ushort(_val)	(((_val) >> 8) | ((_val) << 8))
+static INLINE UINT32 _byteswap_ulong(UINT32 _val) {
+	return  (((_val) >> 24) | \
+		(((_val) & 0x00FF0000) >> 8) | \
+		(((_val) & 0x0000FF00) << 8) | \
+		((_val) << 24));
+}
 
-#define _byteswap_ulong(_val)	(((_val) >> 24) | \
-				(((_val) & 0x00FF0000) >> 8) | \
-				(((_val) & 0x0000FF00) << 8) | \
-				((_val) << 24))
-
-#define	_byteswap_uint64(_val)	(((_val) << 56) | \
-				(((_val) << 40) & 0xFF000000000000) | \
-				(((_val) << 24) & 0xFF0000000000) | \
-				(((_val) << 8)  & 0xFF00000000) | \
-				(((_val) >> 8)  & 0xFF000000) | \
-				(((_val) >> 24) & 0xFF0000) | \
-				(((_val) >> 40) & 0xFF00) | \
-				((_val)  >> 56))
+static INLINE UINT64 _byteswap_uint64(UINT64 _val) {
+	return  (((_val) << 56) | \
+		(((_val) << 40) & 0xFF000000000000) | \
+		(((_val) << 24) & 0xFF0000000000) | \
+		(((_val) << 8)  & 0xFF00000000) | \
+		(((_val) >> 8)  & 0xFF000000) | \
+		(((_val) >> 24) & 0xFF0000) | \
+		(((_val) >> 40) & 0xFF00) | \
+		((_val)  >> 56));
+}
 
 #endif
 
+#if (__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 8))
+
+#define _byteswap_ushort(_val)	__builtin_bswap16(_val)
+
+#else
+
+static INLINE UINT16 _byteswap_ushort(UINT16 _val) {
+	return (((_val) >> 8) | ((_val) << 8));
+}
+
 #endif
 
-#ifndef _WIN32
+
 
 #define CopyMemory(Destination, Source, Length)		memcpy((Destination), (Source), (Length))
 #define MoveMemory(Destination, Source, Length)		memmove((Destination), (Source), (Length))

@@ -22,15 +22,17 @@
 #endif
 
 #include <errno.h>
+#include <stdio.h>
 #include <wctype.h>
 
 #include <winpr/crt.h>
 
 /* String Manipulation (CRT): http://msdn.microsoft.com/en-us/library/f0151s4x.aspx */
 
-#ifndef _WIN32
+#include "../log.h"
+#define TAG WINPR_TAG("crt")
 
-#include "casing.c"
+#ifndef _WIN32
 
 char* _strdup(const char* strSource)
 {
@@ -42,7 +44,7 @@ char* _strdup(const char* strSource)
 	strDestination = strdup(strSource);
 
 	if (strDestination == NULL)
-		perror("strdup");
+		WLog_ERR(TAG,"strdup");
 
 	return strDestination;
 }
@@ -54,19 +56,18 @@ WCHAR* _wcsdup(const WCHAR* strSource)
 	if (strSource == NULL)
 		return NULL;
 
-#if defined(sun) && sun
-	strDestination = wsdup(strSource);
-#elif defined(__APPLE__) && defined(__MACH__) || defined(ANDROID)
+#if defined(__APPLE__) && defined(__MACH__) || defined(ANDROID) || defined(sun)
 	strDestination = malloc(wcslen((wchar_t*)strSource));
 
 	if (strDestination != NULL)
 		wcscpy((wchar_t*)strDestination, (const wchar_t*)strSource);
+
 #else
 	strDestination = (WCHAR*) wcsdup((wchar_t*) strSource);
 #endif
 
 	if (strDestination == NULL)
-		perror("wcsdup");
+		WLog_ERR(TAG,"wcsdup");
 
 	return strDestination;
 }
@@ -148,13 +149,18 @@ WCHAR* wcstok_s(WCHAR* strToken, const WCHAR* strDelimit, WCHAR** context)
 		*strToken++ = 0;
 
 	*context = strToken;
-
 	return nextToken;
 }
+
+#endif
+
+#if !defined(_WIN32) || defined(_UWP)
 
 /* Windows API Sets - api-ms-win-core-string-l2-1-0.dll
  * http://msdn.microsoft.com/en-us/library/hh802935/
  */
+
+#include "casing.c"
 
 LPSTR CharUpperA(LPSTR lpsz)
 {
@@ -164,7 +170,8 @@ LPSTR CharUpperA(LPSTR lpsz)
 	if (!lpsz)
 		return NULL;
 
-	length = strlen(lpsz);
+	length = (int) strlen(lpsz);
+
 	if (length < 1)
 		return (LPSTR) NULL;
 
@@ -176,7 +183,6 @@ LPSTR CharUpperA(LPSTR lpsz)
 			c = c - 32;
 
 		*lpsz = c;
-
 		return lpsz;
 	}
 
@@ -191,14 +197,13 @@ LPSTR CharUpperA(LPSTR lpsz)
 
 LPWSTR CharUpperW(LPWSTR lpsz)
 {
-	fprintf(stderr, "CharUpperW unimplemented!\n");
-
+	WLog_ERR(TAG, "CharUpperW unimplemented!");
 	return (LPWSTR) NULL;
 }
 
 DWORD CharUpperBuffA(LPSTR lpsz, DWORD cchLength)
 {
-	int i;
+	DWORD i;
 
 	if (cchLength < 1)
 		return 0;
@@ -232,7 +237,7 @@ LPSTR CharLowerA(LPSTR lpsz)
 	if (!lpsz)
 		return (LPSTR) NULL;
 
-	length = strlen(lpsz);
+	length = (int) strlen(lpsz);
 
 	if (length < 1)
 		return (LPSTR) NULL;
@@ -245,7 +250,6 @@ LPSTR CharLowerA(LPSTR lpsz)
 			c = c + 32;
 
 		*lpsz = c;
-
 		return lpsz;
 	}
 
@@ -260,14 +264,13 @@ LPSTR CharLowerA(LPSTR lpsz)
 
 LPWSTR CharLowerW(LPWSTR lpsz)
 {
-	fprintf(stderr, "CharLowerW unimplemented!\n");
-
+	WLog_ERR(TAG, "CharLowerW unimplemented!");
 	return (LPWSTR) NULL;
 }
 
 DWORD CharLowerBuffA(LPSTR lpsz, DWORD cchLength)
 {
-	int i;
+	DWORD i;
 
 	if (cchLength < 1)
 		return 0;
@@ -303,7 +306,7 @@ BOOL IsCharAlphaA(CHAR ch)
 
 BOOL IsCharAlphaW(WCHAR ch)
 {
-	fprintf(stderr, "IsCharAlphaW unimplemented!\n");
+	WLog_ERR(TAG, "IsCharAlphaW unimplemented!");
 	return 0;
 }
 
@@ -318,7 +321,7 @@ BOOL IsCharAlphaNumericA(CHAR ch)
 
 BOOL IsCharAlphaNumericW(WCHAR ch)
 {
-	fprintf(stderr, "IsCharAlphaNumericW unimplemented!\n");
+	WLog_ERR(TAG, "IsCharAlphaNumericW unimplemented!");
 	return 0;
 }
 
@@ -332,7 +335,7 @@ BOOL IsCharUpperA(CHAR ch)
 
 BOOL IsCharUpperW(WCHAR ch)
 {
-	fprintf(stderr, "IsCharUpperW unimplemented!\n");
+	WLog_ERR(TAG, "IsCharUpperW unimplemented!");
 	return 0;
 }
 
@@ -346,13 +349,13 @@ BOOL IsCharLowerA(CHAR ch)
 
 BOOL IsCharLowerW(WCHAR ch)
 {
-	fprintf(stderr, "IsCharLowerW unimplemented!\n");
+	WLog_ERR(TAG, "IsCharLowerW unimplemented!");
 	return 0;
 }
 
 int lstrlenA(LPCSTR lpString)
 {
-	return strlen(lpString);
+	return (int) strlen(lpString);
 }
 
 int lstrlenW(LPCWSTR lpString)
@@ -367,7 +370,7 @@ int lstrlenW(LPCWSTR lpString)
 	while (*p)
 		p++;
 
-	return p - lpString;
+	return (int) (p - lpString);
 }
 
 int lstrcmpA(LPCSTR lpString1, LPCSTR lpString2)
@@ -387,3 +390,138 @@ int lstrcmpW(LPCWSTR lpString1, LPCWSTR lpString2)
 }
 
 #endif
+
+int ConvertLineEndingToLF(char* str, int size)
+{
+	int status;
+	char* end;
+	char* pInput;
+	char* pOutput;
+
+	end = &str[size];
+	pInput = pOutput = str;
+
+	while (pInput < end)
+	{
+		if ((pInput[0] == '\r') && (pInput[1] == '\n'))
+		{
+			*pOutput++ = '\n';
+			pInput += 2;
+		}
+		else
+		{
+			*pOutput++ = *pInput++;
+		}
+	}
+
+	status = (int) (pOutput - str);
+
+	return status;
+}
+
+char* ConvertLineEndingToCRLF(const char* str, int* size)
+{
+	int count;
+	char* newStr;
+	char* pOutput;
+	const char* end;
+	const char* pInput;
+
+	end = &str[*size];
+
+	count = 0;
+	pInput = str;
+
+	while (pInput < end)
+	{
+		if (*pInput == '\n')
+			count++;
+
+		pInput++;
+	}
+
+	newStr = (char*) malloc(*size + (count * 2) + 1);
+
+	if (!newStr)
+		return NULL;
+
+	pInput = str;
+	pOutput = newStr;
+
+	while (pInput < end)
+	{
+		if ((*pInput == '\n') && ((pInput > str) && (pInput[-1] != '\r')))
+		{
+			*pOutput++ = '\r';
+			*pOutput++ = '\n';
+		}
+		else
+		{
+			*pOutput++ = *pInput;
+		}
+
+		pInput++;
+	}
+
+	*size = (int) (pOutput - newStr);
+
+	return newStr;
+}
+
+char* StrSep(char** stringp, const char* delim)
+{
+	char* start = *stringp;
+	char* p;
+
+	p = (start != NULL) ? strpbrk(start, delim) : NULL;
+
+	if (!p)
+		*stringp = NULL;
+	else
+	{
+		*p = '\0';
+		*stringp = p + 1;
+	}
+
+	return start;
+}
+
+INT64 GetLine(char** lineptr, size_t* size, FILE* stream)
+{
+#if defined(_WIN32)
+	char c;
+	char *n;
+	size_t step = 32;
+	size_t used = 0;
+
+	if (!lineptr || !size)
+	{
+		errno = EINVAL;
+		return -1;
+	}
+
+	do
+	{
+		if (used + 2 >= *size)
+		{
+			*size += step;
+			n = realloc(*lineptr, *size);
+			if (!n)
+			{
+				return -1;
+			}
+			*lineptr = n;
+		}
+        c = fgetc(stream);
+        if (c != EOF)
+            (*lineptr)[used++] = c;
+    } while((c != '\n') && (c != '\r') && (c != EOF));
+    (*lineptr)[used] = '\0';
+
+	return used;
+#elif !defined(ANDROID) && !defined(IOS)
+	return getline(lineptr, size, stream);
+#else
+	return -1;
+#endif
+}

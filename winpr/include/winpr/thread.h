@@ -84,6 +84,20 @@ typedef STARTUPINFOA	STARTUPINFO;
 typedef LPSTARTUPINFOA	LPSTARTUPINFO;
 #endif
 
+#define STARTF_USESHOWWINDOW        0x00000001
+#define STARTF_USESIZE              0x00000002
+#define STARTF_USEPOSITION          0x00000004
+#define STARTF_USECOUNTCHARS        0x00000008
+#define STARTF_USEFILLATTRIBUTE     0x00000010
+#define STARTF_RUNFULLSCREEN        0x00000020
+#define STARTF_FORCEONFEEDBACK      0x00000040
+#define STARTF_FORCEOFFFEEDBACK     0x00000080
+#define STARTF_USESTDHANDLES        0x00000100
+#define STARTF_USEHOTKEY            0x00000200
+#define STARTF_TITLEISLINKNAME      0x00000800
+#define STARTF_TITLEISAPPID         0x00001000
+#define STARTF_PREVENTPINNING       0x00002000
+
 /* Process */
 
 #define LOGON_WITH_PROFILE			0x00000001
@@ -163,7 +177,7 @@ WINPR_API HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T d
 WINPR_API HANDLE CreateRemoteThread(HANDLE hProcess, LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize,
 		LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId);
 
-DECLSPEC_NORETURN WINPR_API VOID ExitThread(DWORD dwExitCode);
+WINPR_API DECLSPEC_NORETURN VOID ExitThread(DWORD dwExitCode);
 WINPR_API BOOL GetExitCodeThread(HANDLE hThread, LPDWORD lpExitCode);
 
 WINPR_API HANDLE _GetCurrentThread(void);
@@ -200,7 +214,11 @@ WINPR_API BOOL TlsFree(DWORD dwTlsIndex);
 
 /* CommandLineToArgvA is not present in the original Windows API, WinPR always exports it */
 
-WINPR_API LPSTR* CommandLineToArgvA(LPCSTR lpCmdLine, int* pNumArgs);
+WINPR_API LPSTR *CommandLineToArgvA(LPCSTR lpCmdLine, int *pNumArgs);
+
+#if defined(WITH_DEBUG_THREADS)
+WINPR_API VOID DumpThreadHandles(void);
+#endif
 
 #ifdef __cplusplus
 }

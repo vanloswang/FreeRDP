@@ -54,6 +54,8 @@ SET(_OPENSSL_ROOT_HINTS_AND_PATHS
 FIND_PATH(OPENSSL_INCLUDE_DIR
   NAMES
     openssl/ssl.h
+  PATH_SUFFIXES
+	"include"
   HINTS
     ${_OPENSSL_INCLUDEDIR}
   ${_OPENSSL_ROOT_HINTS_AND_PATHS}
@@ -266,7 +268,7 @@ if (OPENSSL_INCLUDE_DIR)
     set(OPENSSL_VERSION "${_OPENSSL_VERSION}")
   elseif(OPENSSL_INCLUDE_DIR AND EXISTS "${OPENSSL_INCLUDE_DIR}/openssl/opensslv.h")
     file(STRINGS "${OPENSSL_INCLUDE_DIR}/openssl/opensslv.h" openssl_version_str
-         REGEX "^#define[\t ]+OPENSSL_VERSION_NUMBER[\t ]+0x([0-9a-fA-F])+.*")
+         REGEX "^#.?define[\t ]+OPENSSL_VERSION_NUMBER[\t ]+0x([0-9a-fA-F])+.*")
 
     # The version number is encoded as 0xMNNFFPPS: major minor fix patch status
     # The status gives if this is a developer or prerelease and is ignored here.

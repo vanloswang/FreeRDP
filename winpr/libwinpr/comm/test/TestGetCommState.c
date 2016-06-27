@@ -58,6 +58,8 @@ static BOOL test_generic(HANDLE hComm)
 	}
 
 	pDcb = (DCB*)calloc(1, sizeof(DCB) * 2);
+	if (!pDcb)
+		return FALSE;
 	pDcb->DCBlength = sizeof(DCB) * 2;
 	result = GetCommState(hComm, pDcb);
 	result = result && (pDcb->DCBlength == sizeof(DCB) * 2);
@@ -129,7 +131,7 @@ int TestGetCommState(int argc, char* argv[])
 
 	if (!CloseHandle(hComm))
 	{
-		fprintf(stderr, "CloseHandle failure, GetLastError()=%0.8x\n", GetLastError());
+		fprintf(stderr, "CloseHandle failure, GetLastError()=%08x\n", GetLastError());
 		return EXIT_FAILURE;
 	}
 

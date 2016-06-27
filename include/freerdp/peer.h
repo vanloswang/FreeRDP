@@ -25,10 +25,11 @@
 #include <freerdp/settings.h>
 #include <freerdp/input.h>
 #include <freerdp/update.h>
+#include <freerdp/autodetect.h>
 
 #include <winpr/sspi.h>
 
-typedef void (*psPeerContextNew)(freerdp_peer* client, rdpContext* context);
+typedef BOOL (*psPeerContextNew)(freerdp_peer* client, rdpContext* context);
 typedef void (*psPeerContextFree)(freerdp_peer* client, rdpContext* context);
 
 typedef BOOL (*psPeerInitialize)(freerdp_peer* client);
@@ -48,16 +49,26 @@ typedef BOOL (*psPeerLogon)(freerdp_peer* client, SEC_WINNT_AUTH_IDENTITY* ident
 typedef int (*psPeerSendChannelData)(freerdp_peer* client, UINT16 channelId, BYTE* data, int size);
 typedef int (*psPeerReceiveChannelData)(freerdp_peer* client, UINT16 channelId, BYTE* data, int size, int flags, int totalSize);
 
+typedef HANDLE (*psPeerVirtualChannelOpen)(freerdp_peer* client, const char* name, UINT32 flags);
+typedef BOOL (*psPeerVirtualChannelClose)(freerdp_peer* client, HANDLE hChannel);
+typedef int (*psPeerVirtualChannelRead)(freerdp_peer* client, HANDLE hChannel, BYTE* buffer, UINT32 length);
+typedef int (*psPeerVirtualChannelWrite)(freerdp_peer* client, HANDLE hChannel, BYTE* buffer, UINT32 length);
+typedef void* (*psPeerVirtualChannelGetData)(freerdp_peer* client, HANDLE hChannel);
+typedef int (*psPeerVirtualChannelSetData)(freerdp_peer* client, HANDLE hChannel, void* data);
+
 struct rdp_freerdp_peer
 {
 	rdpContext* context;
+
 	int sockfd;
 	char hostname[50];
 
 	rdpInput* input;
 	rdpUpdate* update;
 	rdpSettings* settings;
+	rdpAutoDetect* autodetect;
 
+	void* ContextExtra;
 	size_t ContextSize;
 	psPeerContextNew ContextNew;
 	psPeerContextFree ContextFree;
@@ -78,6 +89,13 @@ struct rdp_freerdp_peer
 	psPeerSendChannelData SendChannelData;
 	psPeerReceiveChannelData ReceiveChannelData;
 
+	psPeerVirtualChannelOpen VirtualChannelOpen;
+	psPeerVirtualChannelClose VirtualChannelClose;
+	psPeerVirtualChannelRead VirtualChannelRead;
+	psPeerVirtualChannelWrite VirtualChannelWrite;
+	psPeerVirtualChannelGetData VirtualChannelGetData;
+	psPeerVirtualChannelSetData VirtualChannelSetData;
+
 	int pId;
 	UINT32 ack_frame_id;
 	BOOL local;
@@ -94,7 +112,7 @@ struct rdp_freerdp_peer
 extern "C" {
 #endif
 
-FREERDP_API void freerdp_peer_context_new(freerdp_peer* client);
+FREERDP_API BOOL freerdp_peer_context_new(freerdp_peer* client);
 FREERDP_API void freerdp_peer_context_free(freerdp_peer* client);
 
 FREERDP_API freerdp_peer* freerdp_peer_new(int sockfd);

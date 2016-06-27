@@ -43,6 +43,13 @@ struct _REGION16 {
 };
 typedef struct _REGION16 REGION16;
 
+/** computes if two rectangles are equal
+ * @param r1 first rectangle
+ * @param r2 second rectangle
+ * @return if the two rectangles are equal
+ */
+FREERDP_API BOOL rectangles_equal(const RECTANGLE_16 *r1, const RECTANGLE_16 *r2);
+
 /** computes if two rectangles intersect
  * @param r1 first rectangle
  * @param r2 second rectangle
@@ -66,16 +73,22 @@ FREERDP_API void region16_init(REGION16 *region);
 /** @return the number of rectangles of this region16 */
 FREERDP_API int region16_n_rects(const REGION16 *region);
 
-/** returns a pointer on rectangles and the number of rectangles in this region.
- * nbRect can be set to NULL if not interested by the numnber of rectangles.
+/** returns a pointer to rectangles and the number of rectangles in this region.
+ * nbRects can be set to NULL if not interested in the number of rectangles.
  * @param region the input region
- * @param nbRects a pointer that will be filled with the number of rectangles
+ * @param nbRects if non-NULL returns the number of rectangles
  * @return a pointer on the rectangles
  */
 FREERDP_API const RECTANGLE_16 *region16_rects(const REGION16 *region, int *nbRects);
 
 /** @return the extents rectangle of this region */
 FREERDP_API const RECTANGLE_16 *region16_extents(const REGION16 *region);
+
+/** returns if the rectangle is empty
+ * @param rect
+ * @return if the rectangle is empty
+ */
+FREERDP_API BOOL rectangle_is_empty(const RECTANGLE_16 *rect);
 
 /** returns if the region is empty
  * @param region

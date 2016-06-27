@@ -32,9 +32,9 @@
 #define WITH_POSIX_TIMER	1
 #endif
 
-#ifndef _WIN32
-
 #include "../handle/handle.h"
+
+#ifndef _WIN32
 
 #define WINPR_PIPE_SEMAPHORE	1
 

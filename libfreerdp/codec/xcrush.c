@@ -25,7 +25,10 @@
 #include <winpr/print.h>
 #include <winpr/bitstream.h>
 
+#include <freerdp/log.h>
 #include <freerdp/codec/xcrush.h>
+
+#define TAG FREERDP_TAG("codec")
 
 const char* xcrush_get_level_2_compression_flags_string(UINT32 flags)
 {
@@ -813,18 +816,26 @@ int xcrush_decompress(XCRUSH_CONTEXT* xcrush, BYTE* pSrcData, UINT32 SrcSize, BY
 	pSrcData += 2;
 	SrcSize -= 2;
 
-	if (Level2ComprFlags & PACKET_COMPRESSED)
+	if (flags & PACKET_FLUSHED)
 	{
-		status = mppc_decompress(xcrush->mppc, pSrcData, SrcSize, &pDstData, &DstSize, Level2ComprFlags);
-
-		if (status < 0)
-			return status;
+		ZeroMemory(xcrush->HistoryBuffer, xcrush->HistoryBufferSize);
+		xcrush->HistoryOffset = 0;
 	}
-	else
+
+	if (!(Level2ComprFlags & PACKET_COMPRESSED))
 	{
 		pDstData = pSrcData;
 		DstSize = SrcSize;
+
+		status = xcrush_decompress_l1(xcrush, pDstData, DstSize, ppDstData, pDstSize, Level1ComprFlags);
+
+		return status;
 	}
+
+	status = mppc_decompress(xcrush->mppc, pSrcData, SrcSize, &pDstData, &DstSize, Level2ComprFlags);
+
+	if (status < 0)
+		return status;
 
 	status = xcrush_decompress_l1(xcrush, pDstData, DstSize, ppDstData, pDstSize, Level1ComprFlags);
 
@@ -990,7 +1001,7 @@ int xcrush_compress(XCRUSH_CONTEXT* xcrush, BYTE* pSrcData, UINT32 SrcSize, BYTE
 	OriginalData[1] = (BYTE) Level2ComprFlags;
 
 #if 0
-	printf("XCrushCompress: Level1ComprFlags: %s Level2ComprFlags: %s\n",
+	WLog_DBG(TAG, "XCrushCompress: Level1ComprFlags: %s Level2ComprFlags: %s",
 			xcrush_get_level_1_compression_flags_string(Level1ComprFlags),
 			xcrush_get_level_2_compression_flags_string(Level2ComprFlags));
 #endif

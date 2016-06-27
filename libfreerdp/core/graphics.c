@@ -33,20 +33,20 @@ rdpBitmap* Bitmap_Alloc(rdpContext* context)
 	rdpGraphics* graphics;
 
 	graphics = context->graphics;
-	bitmap = (rdpBitmap*) malloc(graphics->Bitmap_Prototype->size);
+	bitmap = (rdpBitmap*) calloc(1, graphics->Bitmap_Prototype->size);
 
 	if (bitmap)
 	{
-		CopyMemory(bitmap, context->graphics->Bitmap_Prototype, sizeof(rdpBitmap));
+		CopyMemory(bitmap, graphics->Bitmap_Prototype, sizeof(rdpBitmap));
 		bitmap->data = NULL;
 	}
 
 	return bitmap;
 }
 
-void Bitmap_New(rdpContext* context, rdpBitmap* bitmap)
+BOOL Bitmap_New(rdpContext* context, rdpBitmap* bitmap)
 {
-
+	return TRUE;
 }
 
 void Bitmap_Free(rdpContext* context, rdpBitmap* bitmap)
@@ -77,9 +77,9 @@ void Bitmap_SetDimensions(rdpContext* context, rdpBitmap* bitmap, UINT16 width, 
 }
 
 /* static method */
-void Bitmap_SetSurface(rdpContext* context, rdpBitmap* bitmap, BOOL primary)
+BOOL Bitmap_SetSurface(rdpContext* context, rdpBitmap* bitmap, BOOL primary)
 {
-	context->graphics->Bitmap_Prototype->SetSurface(context, bitmap, primary);
+	return context->graphics->Bitmap_Prototype->SetSurface(context, bitmap, primary);
 }
 
 void graphics_register_bitmap(rdpGraphics* graphics, rdpBitmap* bitmap)
@@ -95,19 +95,19 @@ rdpPointer* Pointer_Alloc(rdpContext* context)
 	rdpGraphics* graphics;
 
 	graphics = context->graphics;
-	pointer = (rdpPointer*) malloc(graphics->Pointer_Prototype->size);
+	pointer = (rdpPointer*) calloc(1, graphics->Pointer_Prototype->size);
 
 	if (pointer)
 	{
-		CopyMemory(pointer, context->graphics->Pointer_Prototype, sizeof(rdpPointer));
+		CopyMemory(pointer, graphics->Pointer_Prototype, sizeof(rdpPointer));
 	}
 
 	return pointer;
 }
 
-void Pointer_New(rdpContext* context, rdpPointer* pointer)
+BOOL Pointer_New(rdpContext* context, rdpPointer* pointer)
 {
-
+	return TRUE;
 }
 
 void Pointer_Free(rdpContext* context, rdpPointer* pointer)
@@ -133,19 +133,24 @@ void Pointer_Free(rdpContext* context, rdpPointer* pointer)
 }
 
 /* static method */
-void Pointer_Set(rdpContext* context, rdpPointer* pointer)
+BOOL Pointer_Set(rdpContext* context, rdpPointer* pointer)
 {
-	context->graphics->Pointer_Prototype->Set(context, pointer);
+	return context->graphics->Pointer_Prototype->Set(context, pointer);
 }
 
-void Pointer_SetNull(rdpContext* context)
+BOOL Pointer_SetNull(rdpContext* context)
 {
-	context->graphics->Pointer_Prototype->SetNull(context);
+	return context->graphics->Pointer_Prototype->SetNull(context);
 }
 
-void Pointer_SetDefault(rdpContext* context)
+BOOL Pointer_SetDefault(rdpContext* context)
 {
-	context->graphics->Pointer_Prototype->SetDefault(context);
+	return context->graphics->Pointer_Prototype->SetDefault(context);
+}
+
+BOOL Pointer_SetPosition(rdpContext* context, UINT32 x, UINT32 y)
+{
+	return IFCALLRESULT(TRUE, context->graphics->Pointer_Prototype->SetPosition, context, x, y);
 }
 
 void graphics_register_pointer(rdpGraphics* graphics, rdpPointer* pointer)
@@ -161,19 +166,19 @@ rdpGlyph* Glyph_Alloc(rdpContext* context)
 	rdpGraphics* graphics;
 
 	graphics = context->graphics;
-	glyph = (rdpGlyph*) malloc(graphics->Glyph_Prototype->size);
+	glyph = (rdpGlyph*) calloc(1, graphics->Glyph_Prototype->size);
 
 	if (glyph)
 	{
-		CopyMemory(glyph, context->graphics->Glyph_Prototype, sizeof(rdpGlyph));
+		CopyMemory(glyph, graphics->Glyph_Prototype, sizeof(rdpGlyph));
 	}
 
 	return glyph;
 }
 
-void Glyph_New(rdpContext* context, rdpGlyph* glyph)
+BOOL Glyph_New(rdpContext* context, rdpGlyph* glyph)
 {
-	context->graphics->Glyph_Prototype->New(context, glyph);
+	return context->graphics->Glyph_Prototype->New(context, glyph);
 }
 
 void Glyph_Free(rdpContext* context, rdpGlyph* glyph)
@@ -181,19 +186,19 @@ void Glyph_Free(rdpContext* context, rdpGlyph* glyph)
 	context->graphics->Glyph_Prototype->Free(context, glyph);
 }
 
-void Glyph_Draw(rdpContext* context, rdpGlyph* glyph, int x, int y)
+BOOL Glyph_Draw(rdpContext* context, rdpGlyph* glyph, int x, int y)
 {
-	context->graphics->Glyph_Prototype->Draw(context, glyph, x, y);
+	return context->graphics->Glyph_Prototype->Draw(context, glyph, x, y);
 }
 
-void Glyph_BeginDraw(rdpContext* context, int x, int y, int width, int height, UINT32 bgcolor, UINT32 fgcolor)
+BOOL Glyph_BeginDraw(rdpContext* context, int x, int y, int width, int height, UINT32 bgcolor, UINT32 fgcolor, BOOL fOpRedundant)
 {
-	context->graphics->Glyph_Prototype->BeginDraw(context, x, y, width, height, bgcolor, fgcolor);
+	return context->graphics->Glyph_Prototype->BeginDraw(context, x, y, width, height, bgcolor, fgcolor, fOpRedundant);
 }
 
-void Glyph_EndDraw(rdpContext* context, int x, int y, int width, int height, UINT32 bgcolor, UINT32 fgcolor)
+BOOL Glyph_EndDraw(rdpContext* context, int x, int y, int width, int height, UINT32 bgcolor, UINT32 fgcolor)
 {
-	context->graphics->Glyph_Prototype->EndDraw(context, x, y, width, height, bgcolor, fgcolor);
+	return context->graphics->Glyph_Prototype->EndDraw(context, x, y, width, height, bgcolor, fgcolor);
 }
 
 void graphics_register_glyph(rdpGraphics* graphics, rdpGlyph* glyph)
@@ -216,7 +221,10 @@ rdpGraphics* graphics_new(rdpContext* context)
 		graphics->Bitmap_Prototype = (rdpBitmap*) calloc(1, sizeof(rdpBitmap));
 
 		if (!graphics->Bitmap_Prototype)
+		{
+			free (graphics);
 			return NULL;
+		}
 
 		graphics->Bitmap_Prototype->size = sizeof(rdpBitmap);
 		graphics->Bitmap_Prototype->New = Bitmap_New;
@@ -225,7 +233,11 @@ rdpGraphics* graphics_new(rdpContext* context)
 		graphics->Pointer_Prototype = (rdpPointer*) calloc(1, sizeof(rdpPointer));
 
 		if (!graphics->Pointer_Prototype)
+		{
+			free (graphics->Bitmap_Prototype);
+			free (graphics);
 			return NULL;
+		}
 
 		graphics->Pointer_Prototype->size = sizeof(rdpPointer);
 		graphics->Pointer_Prototype->New = Pointer_New;
@@ -234,7 +246,12 @@ rdpGraphics* graphics_new(rdpContext* context)
 		graphics->Glyph_Prototype = (rdpGlyph*) calloc(1, sizeof(rdpGlyph));
 
 		if (!graphics->Glyph_Prototype)
+		{
+			free (graphics->Pointer_Prototype);
+			free (graphics->Bitmap_Prototype);
+			free (graphics);
 			return NULL;
+		}
 
 		graphics->Glyph_Prototype->size = sizeof(rdpGlyph);
 		graphics->Glyph_Prototype->New = Glyph_New;

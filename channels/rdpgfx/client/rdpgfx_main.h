@@ -28,8 +28,9 @@
 #include <winpr/collections.h>
 
 #include <freerdp/client/rdpgfx.h>
-
+#include <freerdp/channels/log.h>
 #include <freerdp/codec/zgfx.h>
+#include <freerdp/freerdp.h>
 
 struct _RDPGFX_CHANNEL_CALLBACK
 {
@@ -58,7 +59,6 @@ struct _RDPGFX_PLUGIN
 	IWTSListener* listener;
 	RDPGFX_LISTENER_CALLBACK* listener_callback;
 
-	wLog* log;
 	rdpSettings* settings;
 
 	BOOL ThinClient;
@@ -66,15 +66,18 @@ struct _RDPGFX_PLUGIN
 	BOOL Progressive;
 	BOOL ProgressiveV2;
 	BOOL H264;
+	BOOL AVC444;
 
 	ZGFX_CONTEXT* zgfx;
 	UINT32 UnacknowledgedFrames;
 	UINT32 TotalDecodedFrames;
+	BOOL suspendFrameAcks;
 
 	wHashTable* SurfaceTable;
 
 	UINT16 MaxCacheSlot;
 	void* CacheSlots[25600];
+	rdpContext* rdpcontext;
 };
 typedef struct _RDPGFX_PLUGIN RDPGFX_PLUGIN;
 

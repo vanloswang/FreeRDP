@@ -36,11 +36,14 @@
 
 #ifdef __APPLE__
 #include <malloc/malloc.h>
-#elif __FreeBSD__
+#elif __FreeBSD__ || __OpenBSD__
 #include <stdlib.h>
 #else
 #include <malloc.h>
 #endif
+
+#include "../log.h"
+#define TAG WINPR_TAG("crt")
 
 struct winpr_aligned_mem
 {
@@ -90,12 +93,10 @@ void* _aligned_offset_malloc(size_t size, size_t alignment, size_t offset)
 		return NULL;
 
 	memblock = (void*)((((size_t)(((BYTE*) base) + alignment + offset + sizeof(WINPR_ALIGNED_MEM)) & ~(alignment - 1)) - offset));
-
 	pMem = WINPR_ALIGNED_MEM_STRUCT_FROM_PTR(memblock);
 	pMem->sig = WINPR_ALIGNED_MEM_SIGNATURE;
 	pMem->base_addr = base;
 	pMem->size = size;
-
 	return memblock;
 }
 
@@ -109,6 +110,13 @@ void* _aligned_offset_realloc(void* memblock, size_t size, size_t alignment, siz
 	if (!memblock)
 		return _aligned_offset_malloc(size, alignment, offset);
 
+	pMem = WINPR_ALIGNED_MEM_STRUCT_FROM_PTR(memblock);
+	if (pMem->sig != WINPR_ALIGNED_MEM_SIGNATURE)
+	{
+		WLog_ERR(TAG, "_aligned_offset_realloc: memory block was not allocated by _aligned_malloc!");
+		return NULL;
+	}
+
 	if (size == 0)
 	{
 		_aligned_free(memblock);
@@ -116,24 +124,14 @@ void* _aligned_offset_realloc(void* memblock, size_t size, size_t alignment, siz
 	}
 
 	newMemblock = _aligned_offset_malloc(size, alignment, offset);
-
 	if (!newMemblock)
 		return NULL;
 
-	pMem = WINPR_ALIGNED_MEM_STRUCT_FROM_PTR(memblock);
 	pNewMem = WINPR_ALIGNED_MEM_STRUCT_FROM_PTR(newMemblock);
 
-	if (pMem->sig != WINPR_ALIGNED_MEM_SIGNATURE)
-	{
-		fprintf(stderr, "_aligned_offset_realloc: memory block was not allocated by _aligned_malloc!\n");
-		return NULL;
-	}
-
 	copySize = (pNewMem->size < pMem->size) ? pNewMem->size : pMem->size;
-
 	CopyMemory(newMemblock, memblock, copySize);
 	_aligned_free(memblock);
-
 	return newMemblock;
 }
 
@@ -144,7 +142,22 @@ void* _aligned_offset_recalloc(void* memblock, size_t num, size_t size, size_t a
 	WINPR_ALIGNED_MEM* pNewMem;
 
 	if (!memblock)
-		return _aligned_offset_malloc(size, alignment, offset);
+	{
+		newMemblock = _aligned_offset_malloc(size * num, alignment, offset);
+		if (newMemblock)
+		{
+			pNewMem = WINPR_ALIGNED_MEM_STRUCT_FROM_PTR(newMemblock);
+			ZeroMemory(newMemblock, pNewMem->size);
+		}
+		return memblock;
+	}
+
+	pMem = WINPR_ALIGNED_MEM_STRUCT_FROM_PTR(memblock);
+	if (pMem->sig != WINPR_ALIGNED_MEM_SIGNATURE)
+	{
+		WLog_ERR(TAG, "_aligned_offset_recalloc: memory block was not allocated by _aligned_malloc!");
+		return NULL;
+	}
 
 	if (size == 0)
 	{
@@ -152,23 +165,15 @@ void* _aligned_offset_recalloc(void* memblock, size_t num, size_t size, size_t a
 		return NULL;
 	}
 
-	newMemblock = _aligned_offset_malloc(size, alignment, offset);
+	newMemblock = _aligned_offset_malloc(size * num, alignment, offset);
 
 	if (!newMemblock)
 		return NULL;
 
-	pMem = WINPR_ALIGNED_MEM_STRUCT_FROM_PTR(memblock);
 	pNewMem = WINPR_ALIGNED_MEM_STRUCT_FROM_PTR(newMemblock);
-
-	if (pMem->sig != WINPR_ALIGNED_MEM_SIGNATURE)
-	{
-		fprintf(stderr, "_aligned_offset_recalloc: memory block was not allocated by _aligned_malloc!\n");
-		return NULL;
-	}
 
 	ZeroMemory(newMemblock, pNewMem->size);
 	_aligned_free(memblock);
-
 	return newMemblock;
 }
 
@@ -183,7 +188,7 @@ size_t _aligned_msize(void* memblock, size_t alignment, size_t offset)
 
 	if (pMem->sig != WINPR_ALIGNED_MEM_SIGNATURE)
 	{
-		fprintf(stderr, "_aligned_msize: memory block was not allocated by _aligned_malloc!\n");
+		WLog_ERR(TAG, "_aligned_msize: memory block was not allocated by _aligned_malloc!");
 		return 0;
 	}
 
@@ -201,7 +206,7 @@ void _aligned_free(void* memblock)
 
 	if (pMem->sig != WINPR_ALIGNED_MEM_SIGNATURE)
 	{
-		fprintf(stderr, "_aligned_free: memory block was not allocated by _aligned_malloc!\n");
+		WLog_ERR(TAG, "_aligned_free: memory block was not allocated by _aligned_malloc!");
 		return;
 	}
 

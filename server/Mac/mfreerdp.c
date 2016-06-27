@@ -60,7 +60,6 @@ static void mf_server_main_loop(freerdp_listener* instance)
 
 		if (instance->GetFileDescriptor(instance, rfds, &rcount) != TRUE)
 		{
-			fprintf(stderr, "Failed to get FreeRDP file descriptor\n");
 			break;
 		}
 
@@ -88,14 +87,12 @@ static void mf_server_main_loop(freerdp_listener* instance)
 				(errno == EINPROGRESS) ||
 				(errno == EINTR))) /* signal occurred */
 			{
-				fprintf(stderr, "select failed\n");
 				break;
 			}
 		}
 
 		if (instance->CheckFileDescriptor(instance) != TRUE)
 		{
-			fprintf(stderr, "Failed to check FreeRDP file descriptor\n");
 			break;
 		}
 	}
@@ -111,7 +108,8 @@ int main(int argc, char* argv[])
 
 	WTSRegisterWtsApiFunctionTable(FreeRDP_InitWtsApi());
 	
-	instance = freerdp_listener_new();
+	if (!(instance = freerdp_listener_new()))
+		return 1;
 
 	instance->PeerAccepted = mf_peer_accepted;
 
@@ -124,4 +122,3 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
-

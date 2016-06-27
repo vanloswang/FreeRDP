@@ -281,16 +281,16 @@ extern "C" {
 
 WINPR_API char* GetKnownPath(int id);
 WINPR_API char* GetKnownSubPath(int id, const char* path);
+WINPR_API char* GetEnvironmentPath(char* name);
+WINPR_API char* GetEnvironmentSubPath(char* name, const char* path);
 WINPR_API char* GetCombinedPath(const char* basePath, const char* subPath);
 
-//#ifndef _WIN32
+WINPR_API BOOL PathMakePathA(LPCSTR path, LPSECURITY_ATTRIBUTES lpAttributes);
+
+#if !defined(_WIN32) || defined(_UWP)
 
 WINPR_API BOOL PathFileExistsA(LPCSTR pszPath);
 WINPR_API BOOL PathFileExistsW(LPCWSTR pszPath);
-
-#ifdef __cplusplus
-}
-#endif
 
 #ifdef UNICODE
 #define PathFileExists	PathFileExistsW
@@ -298,6 +298,14 @@ WINPR_API BOOL PathFileExistsW(LPCWSTR pszPath);
 #define PathFileExists	PathFileExistsA
 #endif
 
-//#endif
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
+#ifdef _WIN32
+#include <Shlwapi.h>
+#endif
 
 #endif /* WINPR_PATH_H */

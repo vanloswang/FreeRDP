@@ -17,16 +17,13 @@
 
 define_channel_client("encomsp")
 
+include_directories(..)
+
 set(${MODULE_PREFIX}_SRCS
 	encomsp_main.c
 	encomsp_main.h)
 
 add_channel_client_library(${MODULE_PREFIX} ${MODULE_NAME} ${CHANNEL_NAME} FALSE "VirtualChannelEntry")
 
-set_target_properties(${MODULE_NAME} PROPERTIES PREFIX "")
-
-set(${MODULE_PREFIX}_LIBS ${${MODULE_PREFIX}_LIBS} winpr)
-
-install(TARGETS ${MODULE_NAME} DESTINATION ${FREERDP_ADDIN_PATH} EXPORT FreeRDPTargets)
 
 set_property(TARGET ${MODULE_NAME} PROPERTY FOLDER "Channels/${CHANNEL_NAME}/Client")

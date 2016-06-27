@@ -4,6 +4,8 @@
  *
  * Copyright 2011 O.S. Systems Software Ltda.
  * Copyright 2011 Eduardo Fiss Beloni <beloni@ossystems.com.br>
+ * Copyright 2015 Thincast Technologies GmbH
+ * Copyright 2015 DI (FH) Martin Haimberger <martin.haimberger@thincast.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +23,7 @@
 #ifndef FREERDP_CHANNEL_SMARTCARD_CLIENT_MAIN_H
 #define FREERDP_CHANNEL_SMARTCARD_CLIENT_MAIN_H
 
-#include <freerdp/utils/debug.h>
+#include <freerdp/channels/log.h>
 #include <freerdp/channels/rdpdr.h>
 
 #include <winpr/crt.h>
@@ -29,6 +31,8 @@
 #include <winpr/synch.h>
 #include <winpr/smartcard.h>
 #include <winpr/collections.h>
+
+#define TAG CHANNELS_TAG("smartcard.client")
 
 #define RDP_SCARD_CTL_CODE(code)	CTL_CODE(FILE_DEVICE_FILE_SYSTEM, (code), METHOD_BUFFERED, FILE_ANY_ACCESS)
 
@@ -106,8 +110,6 @@ struct _SMARTCARD_DEVICE
 {
 	DEVICE device;
 
-	wLog* log;
-
 	char* name;
 	char* path;
 
@@ -117,16 +119,17 @@ struct _SMARTCARD_DEVICE
 	wQueue* CompletedIrpQueue;
 	wListDictionary* rgSCardContextList;
 	wListDictionary* rgOutstandingMessages;
+	rdpContext* rdpcontext;
 };
 
 SMARTCARD_CONTEXT* smartcard_context_new(SMARTCARD_DEVICE* smartcard, SCARDCONTEXT hContext);
 void smartcard_context_free(SMARTCARD_CONTEXT* pContext);
 
-void smartcard_complete_irp(SMARTCARD_DEVICE* smartcard, IRP* irp);
-void smartcard_process_irp(SMARTCARD_DEVICE* smartcard, IRP* irp);
+UINT smartcard_complete_irp(SMARTCARD_DEVICE* smartcard, IRP* irp);
+UINT smartcard_process_irp(SMARTCARD_DEVICE* smartcard, IRP* irp);
 
-UINT32 smartcard_irp_device_control_decode(SMARTCARD_DEVICE* smartcard, SMARTCARD_OPERATION* operation);
-UINT32 smartcard_irp_device_control_call(SMARTCARD_DEVICE* smartcard, SMARTCARD_OPERATION* operation);
+LONG smartcard_irp_device_control_decode(SMARTCARD_DEVICE* smartcard, SMARTCARD_OPERATION* operation);
+LONG smartcard_irp_device_control_call(SMARTCARD_DEVICE* smartcard, SMARTCARD_OPERATION* operation);
 
 #include "smartcard_pack.h"
 

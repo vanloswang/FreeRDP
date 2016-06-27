@@ -3,6 +3,7 @@
  * Server Channels
  *
  * Copyright 2014 Marc-Andre Moreau <marcandre.moreau@gmail.com>
+ * Copyright 2015 Copyright 2015 Thincast Technologies GmbH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,16 +22,18 @@
 #define FREERDP_CORE_SERVER_H
 
 #include <freerdp/freerdp.h>
-#include <freerdp/utils/debug.h>
+
 #include <freerdp/channels/wtsvc.h>
 
 #include <winpr/synch.h>
 #include <winpr/stream.h>
 #include <winpr/collections.h>
 
+typedef struct rdp_peer_channel rdpPeerChannel;
 typedef struct WTSVirtualChannelManager WTSVirtualChannelManager;
 
 #include "rdp.h"
+#include "mcs.h"
 
 #define CREATE_REQUEST_PDU			0x01
 #define DATA_FIRST_PDU				0x02
@@ -59,22 +62,23 @@ enum
 	DVC_OPEN_STATE_CLOSED = 3
 };
 
-typedef struct rdp_peer_channel rdpPeerChannel;
-
 struct rdp_peer_channel
 {
 	WTSVirtualChannelManager* vcm;
 	freerdp_peer* client;
 
+	void* extra;
+	UINT16 index;
 	UINT32 channelId;
 	UINT16 channelType;
-	UINT16 index;
+	UINT32 channelFlags;
 
 	wStream* receiveData;
 	wMessageQueue* queue;
 
 	BYTE dvc_open_state;
 	UINT32 dvc_total_length;
+	rdpMcsChannel* mcsChannel;
 };
 
 struct WTSVirtualChannelManager
@@ -87,13 +91,15 @@ struct WTSVirtualChannelManager
 
 	rdpPeerChannel* drdynvc_channel;
 	BYTE drdynvc_state;
-	UINT32 dvc_channel_id_seq;
+	LONG dvc_channel_id_seq;
 
 	wArrayList* dynamicVirtualChannels;
 };
 
 BOOL WINAPI FreeRDP_WTSStartRemoteControlSessionW(LPWSTR pTargetServerName, ULONG TargetLogonId, BYTE HotkeyVk, USHORT HotkeyModifiers);
 BOOL WINAPI FreeRDP_WTSStartRemoteControlSessionA(LPSTR pTargetServerName, ULONG TargetLogonId, BYTE HotkeyVk, USHORT HotkeyModifiers);
+BOOL WINAPI FreeRDP_WTSStartRemoteControlSessionExW(LPWSTR pTargetServerName, ULONG TargetLogonId, BYTE HotkeyVk, USHORT HotkeyModifiers, DWORD flags);
+BOOL WINAPI FreeRDP_WTSStartRemoteControlSessionExA(LPSTR pTargetServerName, ULONG TargetLogonId, BYTE HotkeyVk, USHORT HotkeyModifiers, DWORD flags);
 BOOL WINAPI FreeRDP_WTSStopRemoteControlSession(ULONG LogonId);
 BOOL WINAPI FreeRDP_WTSConnectSessionW(ULONG LogonId, ULONG TargetLogonId, PWSTR pPassword, BOOL bWait);
 BOOL WINAPI FreeRDP_WTSConnectSessionA(ULONG LogonId, ULONG TargetLogonId, PSTR pPassword, BOOL bWait);
@@ -169,5 +175,8 @@ BOOL CDECL FreeRDP_WTSIsChildSessionsEnabled(PBOOL pbEnabled);
 BOOL CDECL FreeRDP_WTSGetChildSessionId(PULONG pSessionId);
 
 DWORD WINAPI FreeRDP_WTSGetActiveConsoleSessionId(void);
+
+BOOL WINAPI FreeRDP_WTSLogoffUser(HANDLE hServer);
+BOOL WINAPI FreeRDP_WTSLogonUser(HANDLE hServer, LPCSTR username, LPCSTR password, LPCSTR domain);
 
 #endif /* FREERDP_CORE_SERVER_H */

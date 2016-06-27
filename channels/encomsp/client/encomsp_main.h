@@ -3,6 +3,8 @@
  * Multiparty Virtual Channel
  *
  * Copyright 2014 Marc-Andre Moreau <marcandre.moreau@gmail.com>
+ * Copyright 2015 Thincast Technologies GmbH
+ * Copyright 2015 DI (FH) Martin Haimberger <martin.haimberger@thincast.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,21 +29,27 @@
 #include <winpr/collections.h>
 
 #include <freerdp/api.h>
+#include <freerdp/channels/log.h>
 #include <freerdp/svc.h>
 #include <freerdp/addin.h>
 
 #include <freerdp/client/encomsp.h>
+
+#define TAG CHANNELS_TAG("encomsp.client")
 
 struct encomsp_plugin
 {
 	CHANNEL_DEF channelDef;
 	CHANNEL_ENTRY_POINTS_FREERDP channelEntryPoints;
 
+	EncomspClientContext* context;
+
 	HANDLE thread;
 	wStream* data_in;
 	void* InitHandle;
 	DWORD OpenHandle;
-	wMessagePipe* MsgPipe;
+	wMessageQueue* queue;
+	rdpContext* rdpcontext;
 };
 typedef struct encomsp_plugin encomspPlugin;
 

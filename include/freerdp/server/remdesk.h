@@ -3,6 +3,8 @@
  * Remote Assistance Virtual Channel
  *
  * Copyright 2014 Marc-Andre Moreau <marcandre.moreau@gmail.com>
+ * Copyright 2015 Thincast Technologies GmbH
+ * Copyright 2015 DI (FH) Martin Haimberger <martin.haimberger@thincast.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,21 +35,31 @@
 typedef struct _remdesk_server_context RemdeskServerContext;
 typedef struct _remdesk_server_private RemdeskServerPrivate;
 
-typedef int (*psRemdeskStart)(RemdeskServerContext* context);
-typedef int (*psRemdeskStop)(RemdeskServerContext* context);
+typedef UINT (*psRemdeskStart)(RemdeskServerContext* context);
+typedef UINT (*psRemdeskStop)(RemdeskServerContext* context);
 
 struct _remdesk_server_context
 {
 	HANDLE vcm;
+	void* custom;
 
 	psRemdeskStart Start;
 	psRemdeskStop Stop;
 
 	RemdeskServerPrivate* priv;
+	rdpContext* rdpcontext;
 };
+
+#ifdef __cplusplus
+ extern "C" {
+#endif
 
 FREERDP_API RemdeskServerContext* remdesk_server_context_new(HANDLE vcm);
 FREERDP_API void remdesk_server_context_free(RemdeskServerContext* context);
+
+#ifdef __cplusplus
+ }
+#endif
 
 #endif /* FREERDP_CHANNEL_SERVER_REMDESK_H */
 

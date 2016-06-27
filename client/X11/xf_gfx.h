@@ -23,15 +23,25 @@
 #include "xf_client.h"
 #include "xfreerdp.h"
 
+#include <freerdp/gdi/gfx.h>
+
 struct xf_gfx_surface
 {
 	UINT16 surfaceId;
+	rdpCodecs* codecs;
 	UINT32 width;
 	UINT32 height;
 	BOOL alpha;
 	BYTE* data;
+	BYTE* stage;
 	XImage* image;
 	int scanline;
+	int stageStep;
+	UINT32 format;
+	BOOL outputMapped;
+	UINT32 outputOriginX;
+	UINT32 outputOriginY;
+	REGION16 invalidRegion;
 };
 typedef struct xf_gfx_surface xfGfxSurface;
 
@@ -43,6 +53,7 @@ struct xf_gfx_cache_entry
 	BOOL alpha;
 	BYTE* data;
 	int scanline;
+	UINT32 format;
 };
 typedef struct xf_gfx_cache_entry xfGfxCacheEntry;
 

@@ -19,7 +19,10 @@
 
 #include <assert.h>
 #include <winpr/memory.h>
+#include <freerdp/log.h>
 #include <freerdp/codec/region.h>
+
+#define TAG FREERDP_TAG("codec")
 
 /*
  * The functions in this file implement the Region abstraction largely inspired from
@@ -91,17 +94,17 @@ const RECTANGLE_16 *region16_rects(const REGION16 *region, int *nbRects)
 	REGION16_DATA *data;
 
 	assert(region);
-	assert(region->data);
 
 	data = region->data;
 	if (!data)
 	{
 		if (nbRects)
 			*nbRects = 0;
-		return 0;
+		return NULL;
 	}
 
-	*nbRects = data->nbRects;
+	if (nbRects)
+		*nbRects = data->nbRects;
 	return (RECTANGLE_16 *)(data + 1);
 }
 
@@ -127,12 +130,26 @@ static RECTANGLE_16 *region16_extents_noconst(REGION16 *region)
 	return &region->extents;
 }
 
+BOOL rectangle_is_empty(const RECTANGLE_16 *rect)
+{
+	/* A rectangle with width = 0 or height = 0 should be regarded
+	 * as empty.
+	 */
+	return ((rect->left == rect->right) || (rect->top == rect->bottom)) ? TRUE : FALSE;
+}
+
 BOOL region16_is_empty(const REGION16 *region)
 {
 	assert(region);
 	assert(region->data);
 
 	return (region->data->nbRects == 0);
+}
+
+BOOL rectangles_equal(const RECTANGLE_16 *r1, const RECTANGLE_16 *r2)
+{
+	return ((r1->left == r2->left) && (r1->top == r2->top) &&
+			(r1->right == r2->right) && (r1->bottom == r2->bottom)) ? TRUE : FALSE;
 }
 
 BOOL rectangles_intersects(const RECTANGLE_16 *r1, const RECTANGLE_16 *r2)
@@ -219,20 +236,18 @@ void region16_print(const REGION16 *region)
 	int currentBandY = -1;
 
 	rects = region16_rects(region, &nbRects);
-	fprintf(stderr, "nrects=%d", nbRects);
+	WLog_DBG(TAG,  "nrects=%d", nbRects);
 
 	for (i = 0; i < nbRects; i++, rects++)
 	{
 		if (rects->top != currentBandY)
 		{
 			currentBandY = rects->top;
-			fprintf(stderr, "\nband %d: ", currentBandY);
+			WLog_DBG(TAG,  "band %d: ", currentBandY);
 		}
 
-		fprintf(stderr, "(%d,%d-%d,%d)", rects->left, rects->top, rects->right, rects->bottom);
+		WLog_DBG(TAG,  "(%d,%d-%d,%d)", rects->left, rects->top, rects->right, rects->bottom);
 	}
-
-	fprintf(stderr, "\n");
 }
 
 void region16_copy_band_with_union(RECTANGLE_16 *dst,
@@ -514,7 +529,7 @@ BOOL region16_union_rect(REGION16 *dst, const REGION16 *src, const RECTANGLE_16 
 		dstRect->top = rect->top;
 		dstRect->left = rect->left;
 		dstRect->right = rect->right;
-		dstRect->bottom = srcExtents->top;
+		dstRect->bottom = MIN(srcExtents->top, rect->bottom);
 
 		usedRects++;
 		dstRect++;
@@ -758,10 +773,21 @@ BOOL region16_intersect_rect(REGION16 *dst, const REGION16 *src, const RECTANGLE
 			usedRects++;
 			dstPtr++;
 
-			newExtents.top = MIN(common.top, newExtents.top);
-			newExtents.left = MIN(common.left, newExtents.left);
-			newExtents.bottom = MAX(common.bottom, newExtents.bottom);
-			newExtents.right = MAX(common.right, newExtents.right);
+			if (rectangle_is_empty(&newExtents))
+			{
+				/* Check if the existing newExtents is empty. If it is empty, use 
+				 * new common directly. We do not need to check common rectangle 
+				 * because the rectangles_intersection() ensures that it is not empty.
+				 */
+				newExtents = common;
+			}
+			else
+			{
+				newExtents.top = MIN(common.top, newExtents.top);
+				newExtents.left = MIN(common.left, newExtents.left);
+				newExtents.bottom = MAX(common.bottom, newExtents.bottom);
+				newExtents.right = MAX(common.right, newExtents.right);
+			}
 		}
 	}
 
@@ -786,10 +812,12 @@ BOOL region16_intersect_rect(REGION16 *dst, const REGION16 *src, const RECTANGLE
 void region16_uninit(REGION16 *region)
 {
 	assert(region);
-	assert(region->data);
 
-	if (region->data->size)
-		free(region->data);
+	if (region->data)
+	{
+		if (region->data->size)
+			free(region->data);
 
-	region->data = NULL;
+		region->data = NULL;
+	}
 }

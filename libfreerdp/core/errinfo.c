@@ -23,7 +23,13 @@
 
 #include <stdio.h>
 
+#include <freerdp/log.h>
+
 #include "errinfo.h"
+
+#define TAG FREERDP_TAG("core")
+
+#define ERRINFO_DEFINE(_code)	    { ERRINFO_##_code , "ERRINFO_" #_code , ERRINFO_##_code##_STRING }
 
 int connectErrorCode;
 
@@ -563,12 +569,12 @@ void rdp_print_errinfo(UINT32 code)
 	{
 		if (code == errInfo->code)
 		{
-			fprintf(stderr, "%s (0x%08X):\n%s\n", errInfo->name, code, errInfo->info);
+			WLog_INFO(TAG,  "%s (0x%08X):%s", errInfo->name, code, errInfo->info);
 			return;
 		}
 
 		errInfo++;
 	}
 
-	fprintf(stderr, "ERRINFO_UNKNOWN 0x%08X: Unknown error.\n", code);
+	WLog_ERR(TAG,  "ERRINFO_UNKNOWN 0x%08X: Unknown error.", code);
 }

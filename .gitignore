@@ -20,22 +20,14 @@ LICENSE.txt
 *Config.cmake
 *ConfigVersion.cmake
 include/freerdp/version.h
+include/freerdp/build-config.h
+buildflags.h
 
 *.a.objlist.cmake
 *.a.objlist
 *.a.objdir
 *_dummy.c
 *_dummy.c.base
-
-# Packages
-*.zip
-*.exe
-*.sh
-*.deb
-*.rpm
-*.dmg
-*.tar.Z
-*.tar.gz
 
 # Eclipse
 *.project
@@ -89,9 +81,11 @@ RelWithDebInfo
 *.resource.txt
 *.embed.manifest*
 *.intermediate.manifest*
+version.rc
 
 # Binaries
 *.a
+*.o
 *.so
 *.so.*
 *.dylib
@@ -102,9 +96,11 @@ client/X11/xfreerdp
 client/Mac/xcode
 client/Sample/sfreerdp
 client/DirectFB/dfreerdp
+client/Wayland/wlfreerdp
 server/Sample/sfreerdp-server
 server/X11/xfreerdp-server
 xcode
+libfreerdp/codec/test/TestOpenH264ASM
 
 # Other
 *~
@@ -126,3 +122,22 @@ default.log
 
 # etags
 TAGS
+
+# generated packages
+*.zip
+*.exe
+*.sh
+*.deb
+*.rpm
+*.dmg
+*.tar.Z
+*.tar.gz
+
+# packaging related files
+!packaging/scripts/prepare_deb_freerdp-nightly.sh
+packaging/deb/freerdp-nightly/freerdp-nightly
+packaging/deb/freerdp-nightly/freerdp-nightly-dev
+packaging/deb/freerdp-nightly/freerdp-nightly-dbg
+
+#
+.idea
